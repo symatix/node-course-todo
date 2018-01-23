@@ -4,10 +4,6 @@ const request = require('supertest');
 const app = require('../index');
 const { Todo } = require('../db');
 
-
-
-
-
 describe('POST', () => {
 
     beforeEach((done) => {

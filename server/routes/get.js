@@ -1,4 +1,4 @@
-var { ObjectID } = require('mongoose');
+var { ObjectID } = require('mongodb');
 var { mongoose, Todo, User } = require('../db');
 
 module.exports = function (app) {
@@ -12,9 +12,18 @@ module.exports = function (app) {
     })
 
     app.get('/todos/:id', (req, res) => {
-        Todo.findById(req.params.id).then( todo => {
+        var id = req.params.id;
+
+        if (!ObjectID.isValid(id)){
+            return res.status(404).send();
+        }
+
+        Todo.findById(id).then( todo => {
+            if (!todo) {
+                return res.status(404).send(todo);
+            }
             res.status(200).send(todo);
-        }, err => res.status(400).send(err))
+        }).catch(err => res.status(400).send(err))
     })
 
 }
