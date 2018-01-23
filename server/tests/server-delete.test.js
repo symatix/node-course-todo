@@ -23,18 +23,6 @@ describe('DELETE', () => {
             return Todo.insertMany(todos);
         }).then(() => done());
     })
-
-    // describe('/todos', () => {
-    //     it('should delete all todos', (done) => {
-    //         request(app)
-    //             .delete('/todos')
-    //             .expect(200)
-    //             .expect((res) => {
-    //                 expect(res.body).toEqual({});
-    //             })
-    //             .end(done)
-    //     })
-    // })
     describe('/todos/:id', () => {
         it('should delete a single todo', (done) => {
             var id = todos[0]._id.toHexString();

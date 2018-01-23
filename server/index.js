@@ -7,6 +7,7 @@ app.use(bodyParser.json());
 
 require('./routes/post')(app);
 require('./routes/delete')(app);
+require('./routes/patch')(app);
 require('./routes/get')(app);
 
 var PORT = process.env.PORT || 3000

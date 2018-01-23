@@ -17,12 +17,4 @@ module.exports = function (app) {
             res.status(200).send(todo);
         }).catch(err => res.status(400).send(err))
     })
-
-    app.delete('/todos', (req, res) => {
-        Todo.remove({}).then( res => {
-            console.log(res)
-            res.status(200).send(res);
-        }).catch( err => res.status(400).send(err));
-    })
-
 }
