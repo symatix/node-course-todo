@@ -32,4 +32,24 @@ describe('GET', () => {
                 .end(done)
         })
     })
+    describe('/todos/:id', () => {
+        it('should get a single todo', (done) => {
+            Todo.findOne().then((todo) => {
+
+                request(app)
+                .get(`/todos/${todo._id}`)
+                .expect(200)
+                .expect((res) => {
+                    expect(res.body.text).toBe(todo.text);
+                })
+                .end(done)
+            }, e => console.log(e))
+        })
+        it('should get bad request on invalid id', (done) => {
+            request(app)
+                .get(`/todos/123`)
+                .expect(400)
+                .end(done)
+        })
+    })
 })
