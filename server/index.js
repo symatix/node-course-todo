@@ -11,7 +11,7 @@ require('./routes/todos')(app);
 require('./routes/users')(app);
 
 app.listen(keys.port, () => {
-    console.log(`=> Server is UP on port ${keys.port}`);
+    console.log(`| Server is UP on port ${keys.port} |`);
 })
 
 module.exports = app;

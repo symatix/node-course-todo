@@ -4,27 +4,12 @@ const { ObjectID } = require('mongodb');
 
 const app = require('../');
 const { Todo } = require('../db');
+const { todos, populateTodos } = require('./seed');
 
-const todos = [
-    {
-        _id: new ObjectID(),
-        text: 'First test todo'
-    }, {
-        _id: new ObjectID(),
-        text: 'Second test todo',
-        completed: true,
-        completedAt: 333
-    }
-];
-
-describe('=> TODO-API', () => {
+describe('=> API - TODOS', () => {
 
     // do a clean slate of the test DB
-    beforeEach((done) => {
-        Todo.remove({}).then(() => {
-            Todo.insertMany(todos);
-        }).then(() => done());
-    });
+    beforeEach(populateTodos);
 
     describe('GET /todos', () => {
         it('should fetch all todo documents', (done) => {
