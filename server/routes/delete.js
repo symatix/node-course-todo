@@ -3,7 +3,6 @@ var { mongoose, Todo, User } = require('../db');
 
 module.exports = function (app) {
 
-    
 	app.delete('/todos/:id', (req, res) => {
         var id = req.params.id;
 
