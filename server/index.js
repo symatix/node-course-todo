@@ -1,6 +1,8 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 
+var keys = require('./conf/keys');
+
 var app = express();
 
 app.use(bodyParser.json());
@@ -10,10 +12,8 @@ require('./routes/delete')(app);
 require('./routes/patch')(app);
 require('./routes/get')(app);
 
-var PORT = process.env.PORT || 3000
-
-app.listen(PORT, () => {
-    console.log(`=> Server is UP on port ${PORT}`);
+app.listen(keys.port, () => {
+    console.log(`=> Server is UP on port ${keys.port}`);
 })
 
 module.exports = app;
