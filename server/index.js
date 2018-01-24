@@ -7,10 +7,8 @@ var app = express();
 
 app.use(bodyParser.json());
 
-require('./routes/post')(app);
-require('./routes/delete')(app);
-require('./routes/patch')(app);
-require('./routes/get')(app);
+require('./routes/todos')(app);
+require('./routes/users')(app);
 
 app.listen(keys.port, () => {
     console.log(`=> Server is UP on port ${keys.port}`);

@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const keys = require('../../conf/keys');
+const bcrypt = require('bcryptjs');
 
 var UserSchema = new mongoose.Schema({
     email:{
@@ -33,6 +34,7 @@ var UserSchema = new mongoose.Schema({
     }]
 })
 
+// instance methods
 UserSchema.methods.toJSON = function() {
     var user = this;
     var userObject = user.toObject();
@@ -51,6 +53,40 @@ UserSchema.methods.generateAuthToken = function() {
         return token;
     });
 }
+
+
+// model methods
+UserSchema.statics.findByToken = function (token) {
+    var User = this;
+    var decoded;
+
+    try {
+        decoded = jwt.verify(token, keys.jwtSecret)
+    } catch (e) {
+        return Promise.reject({error: 'Authentication required!'})
+    }
+    return User.findOne({
+        '_id': decoded._id,
+        'tokens.token': token,
+        'tokens.access': 'auth'
+    })
+}
+
+// middleware
+UserSchema.pre('save', function(next) {
+    var user = this;
+
+    if (user.isModified('password')){
+        bcrypt.genSalt(10, (err, salt) => {
+            bcrypt.hash(user.password, salt, (err, hash) => {
+                user.password = hash;
+                next();
+            })
+        })
+    } else {
+        next();
+    }
+})
 
 const User = mongoose.model('User', UserSchema)
 
