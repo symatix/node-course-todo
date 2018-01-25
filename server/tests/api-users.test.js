@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const expect = require('expect');
 const request = require('supertest');
 const { ObjectID } = require('mongodb');
@@ -83,5 +84,68 @@ describe('=> API - USERS', () => {
                     expect(res.headers['x-auth']).toBeFalsy();
                 }).end(done)
         });
+    })
+
+    describe('POST /users/login', () => {
+        it('it should login user and return auth token', (done) => {
+            request(app)
+                .post('/users/login')
+                .send(users[0])
+                .expect(200)
+                .expect((res) => {
+                    expect(res.headers['x-auth']).toBeTruthy();
+                }).end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+                    User.findById(users[0]._id).then((user) => {
+                        const token = _.pick(user.tokens[1], ['access', 'token']);
+
+                        expect(token).toEqual({
+                            access: 'auth',
+                            token: res.headers['x-auth']
+                        })
+                        done();
+                    }).catch(err => done(err))
+                })
+        })
+        it('should reject invalid login', (done) => {
+            request(app)
+                .post('/users/login')
+                .send({email:"totaly@wrong.mail", password:"fakeAF"})
+                .expect(401)
+                .expect((res) => {
+                    expect(res.headers['x-auth']).toBeFalsy();
+                }).end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+                    User.findOne({email:"totaly@wrong.mail"}).then((user) => {
+                        expect(user).toBe(null);
+                        done();
+                    }).catch(err => done(err))
+                })
+        })
+    })
+
+    describe('DELETE /users/me/token', () => {
+        it('should remove auth token on logout', (done) => {
+            request(app)
+                .delete('/users/me/token')
+                .set('x-auth', users[0].tokens[0].token)
+                .expect(200)
+                .expect((res) => {
+                    expect(res.headers['x-auth']).toBeFalsy();
+                })
+                .end((err, res) => {
+                  if (err) {
+                      return done(err);
+                  } 
+                  User.findByToken(users[0].tokens[0].token).then(user => {
+                      expect(user).toBe(null);
+                      done();
+                  }).catch(err => done(err));
+                })
+        })
     })
 })
