@@ -4,45 +4,61 @@ const { ObjectID } = require('mongodb');
 
 const app = require('../');
 const { Todo } = require('../db');
-const { todos, populateTodos } = require('./seed');
+const { users, todos, populateTodos, populateUsers } = require('./seed');
+
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('=> API - TODOS', () => {
 
     // do a clean slate of the test DB
-    beforeEach(populateTodos);
+
 
     describe('GET /todos', () => {
         it('should fetch all todo documents', (done) => {
             request(app)
                 .get('/todos')
+                .set('x-auth', users[0].tokens[0].token)
                 .expect(200)
                 .expect((res) => {
-                    expect(res.body.todos.length).toBe(2);
+                    expect(res.body.todos.length).toBe(1);
                 })
                 .end(done)
-        }).timeout(5000)
+        })
     });
 
     describe('GET /todos/:id', () => {
         it('should get a single todo', (done) => {
+            const hexId = todos[0]._id.toHexString();
             request(app)
-                .get(`/todos/${todos[0]._id.toHexString()}`)
+                .get(`/todos/${hexId}`)
+                .set('x-auth', users[0].tokens[0].token)
                 .expect(200)
                 .expect((res) => {
                     expect(res.body.text).toBe(todos[0].text);
                 })
                 .end(done)
         })
+        it('should not return a single todo of different creator', (done) => {
+            const id = todos[0]._id.toHexString();
+            request(app)
+                .get(`/todos/${id}`)
+                .set('x-auth', users[1].tokens[0].token)
+                .expect(404)
+                .end(done)
+        })
         it('should return 404 for non-object id', (done) => {
             request(app)
                 .get(`/todos/123abc`)
+                .set('x-auth', users[0].tokens[0].token)
                 .expect(404)
                 .end(done)
         })
         it('should return 404 if todo not found', (done) => {
             const id = new ObjectID().toHexString();
-            request(app)
+            request(app)   
                 .get(`/todos/${id}`)
+                .set('x-auth', users[0].tokens[0].token)     
                 .expect(404)
                 .end(done)
         })
@@ -54,6 +70,7 @@ describe('=> API - TODOS', () => {
     
             request(app)
                 .post('/todos')
+                .set('x-auth', users[0].tokens[0].token)
                 .send({ text })
                 .expect(200)
                 .expect((res) => {
@@ -74,7 +91,7 @@ describe('=> API - TODOS', () => {
             request(app)
                 .post('/todos')
                 .send({})
-                .expect(400)
+                .expect(401)
                 .end((err, res) => {
                     if (err) {
                         return done(err);
@@ -95,6 +112,7 @@ describe('=> API - TODOS', () => {
 
             request(app)
                 .patch(`/todos/${id}`)
+                .set('x-auth', users[0].tokens[0].token)
                 .send(updateTodo)
                 .expect(200)
                 .expect((res) => {
@@ -104,12 +122,32 @@ describe('=> API - TODOS', () => {
                 })
                 .end(done);
         })
+        it('should not update a todo of different user', (done) => {
+            var id = todos[0]._id.toHexString();
+            var updateTodo = { text:"new text", completed:true };
+
+            request(app)
+                .patch(`/todos/${id}`)
+                .set('x-auth', users[1].tokens[0].token)
+                .send(updateTodo)
+                .expect(404)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+                    Todo.findById(id).then( todo => {
+                        expect(todo).not.toBe(updateTodo);
+                        done();
+                    }).catch( err => done(err));
+            })
+        })
         it('should clear completedAt when todo is not completed', (done) => {
             var id = todos[0]._id.toHexString();
             var updateTodo = { text:"new text", completed:false };
 
             request(app)
                 .patch(`/todos/${id}`)
+                .set('x-auth', users[0].tokens[0].token)
                 .send(updateTodo)
                 .expect(200)
                 .expect((res) => {
@@ -126,6 +164,7 @@ describe('=> API - TODOS', () => {
             var id = todos[0]._id.toHexString();
             request(app)
                 .delete(`/todos/${id}`)
+                .set('x-auth', users[0].tokens[0].token)
                 .expect(200)
                 .expect((res) => {
                     expect(res.body._id).toBe(id);
@@ -140,9 +179,27 @@ describe('=> API - TODOS', () => {
                     }).catch( err => done(err))
                 })
         })
+        
+        it('should not delete a todo of different creator', (done) => {
+            var id = todos[0]._id.toHexString();
+            request(app)
+                .delete(`/todos/${id}`)
+                .set('x-auth', users[1].tokens[0].token)
+                .expect(404)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+                    Todo.findById(id).then( todo => {
+                        expect(todo).toBe(todo);
+                        done();
+                    }).catch( err => done(err))
+                })
+        })
         it('should return 404 for non-object id', (done) => {
             request(app)
                 .delete(`/todos/123abc`)
+                .set('x-auth', users[0].tokens[0].token)
                 .expect(404)
                 .end(done)
         })
@@ -150,6 +207,7 @@ describe('=> API - TODOS', () => {
             const id = new ObjectID().toHexString();
             request(app)
                 .delete(`/todos/${id}`)
+                .set('x-auth', users[0].tokens[0].token)
                 .expect(404)
                 .end(done)
         })

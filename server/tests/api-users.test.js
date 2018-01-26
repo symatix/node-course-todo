@@ -87,7 +87,7 @@ describe('=> API - USERS', () => {
     })
 
     describe('POST /users/login', () => {
-        it('it should login user and return auth token', (done) => {
+        it('should login user and return auth token', (done) => {
             request(app)
                 .post('/users/login')
                 .send(users[0])
